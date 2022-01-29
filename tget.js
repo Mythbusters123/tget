@@ -208,6 +208,11 @@ TorrentEngine.load(argv._[0], argv, function(torrent) {
                 buf.push(" streams");
             }
 
+            // ETA
+            buf.push("ETA: ")
+            buf.push(TorrentEngine.etaTime())
+            
+
             rl.write(buf.join(""));
         }
 

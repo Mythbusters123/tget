@@ -8,12 +8,12 @@
     "tget": "./tget.js"
   },
   "dependencies": {
-    "mime": "~1.2.11",
-    "minimist": "~0.0.8",
-    "mkdirp": "~0.3.5",
-    "pump": "~0.3.1",
-    "range-parser": "~1.0.0",
-    "torrent-stream": "~0.13.0",
-    "rc": "~0.4.0"
+    "mime": "^3.0.0",
+    "moment": "^2.29.1",
+    "pump": "^3.0.0",
+    "range-parser": "^1.2.1",
+    "rc": "^1.2.8",
+    "readline": "^1.3.0",
+    "torrent-stream": "^1.2.1"
   }
 }

@@ -25,6 +25,7 @@ var fs = require("fs");
 var path = require("path");
 var events = require("events");
 var crypto = require("crypto");
+var moment = require('moment')
 var mkdirp = require("mkdirp");
 var torrentStream = require("torrent-stream");
 
@@ -175,6 +176,10 @@ TorrentEngine.downloadPercent = function() {
 TorrentEngine.downloadSpeed = function() {
     return engine.swarm.downloadSpeed();
 };
+
+TorrentEngine.etaTime = function() {
+    return  moment.duration((TorrentEngine.total_pieces * engine.torrent.pieceLength) / engine.swarm.downloadSpeed(), 'seconds').humanize()
+}
 
 TorrentEngine.downloadedBytes = function() {
     return (TorrentEngine.finished_pieces * engine.torrent.pieceLength) + (engine.swarm.downloaded - download_snapshot);
