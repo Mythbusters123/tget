@@ -181,7 +181,7 @@ TorrentEngine.downloadSpeed = function() {
 };
 
 TorrentEngine.etaTime = function() {
-  let duration = dayjs.duration((TorrentEngine.total_pieces * engine.torrent.pieceLength)/TorrentEngine.downloadSpeed(), 'seconds');  
+  let duration = dayjs.duration(((TorrentEngine.total_pieces - TorrentEngine.finished_pieces)* engine.torrent.pieceLength)/TorrentEngine.downloadSpeed(), 'seconds');  
 
   return duration.format('HH:mm:ss')
 }
