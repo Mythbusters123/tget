@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "chalk": "^5.0.0",
+    "dayjs": "^1.10.7",
     "mime": "^3.0.0",
-    "moment": "^2.29.1",
     "pump": "^3.0.0",
     "range-parser": "^1.2.1",
     "rc": "^1.2.8",

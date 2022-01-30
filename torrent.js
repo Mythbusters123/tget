@@ -24,10 +24,13 @@
 import fs from "fs";
 import path from "path";
 import events from "events";
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration.js'
 import crypto from "crypto";
-import moment from "moment";
 import mkdirp from "mkdirp";
 import torrentStream from "torrent-stream";
+
+dayjs.extend(duration)
 
 let TorrentEngine = new events.EventEmitter();
 
@@ -178,7 +181,9 @@ TorrentEngine.downloadSpeed = function() {
 };
 
 TorrentEngine.etaTime = function() {
-    return  moment.duration((TorrentEngine.total_pieces * engine.torrent.pieceLength) / engine.swarm.downloadSpeed(), 'seconds').humanize()
+  let duration = dayjs.duration((TorrentEngine.total_pieces * engine.torrent.pieceLength)/TorrentEngine.downloadSpeed(), 'seconds');  
+
+  return duration.format('HH:mm:ss')
 }
 
 TorrentEngine.downloadedBytes = function() {
