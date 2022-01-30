@@ -24,19 +24,19 @@
     Copyright (C) 2013 Mathias Buus Madsen <mathiasbuus@gmail.com>
 */
 
-var url = require("url");
-var http = require("http");
-var mime = require("mime");
-var rangeParser = require("range-parser");
-var pump = require("pump");
-var events = require("events");
+import url from "url";
+import http from "http";
+import mime from "mime";
+import rangeParser from "range-parser";
+import pump from "pump";
+import events from "events";
 
-var StreamServer = new events.EventEmitter();
+let StreamServer = new events.EventEmitter();
 
 StreamServer.enabled = false;
 StreamServer.open_streams = 0;
 
-var media_extensions = [
+let media_extensions = [
     "3gp",
     "asf",
     "wmv",
@@ -82,8 +82,8 @@ StreamServer.init = function(port, files) {
     StreamServer.port = (typeof port != "number" || port < 0 || port > 65535) ? 8888 : port;
 
     // Media files in this torrent
-    var media_files = files.map(function(f, i) {
-        var offset;
+    let media_files = files.map(function(f, i) {
+        let offset;
         return {
             name: f.path,
             id:   i + 1,
@@ -96,7 +96,7 @@ StreamServer.init = function(port, files) {
         }
 
         // Try to match from MIME type
-        var mime_type = mime.lookup(f.name).split("/")[0];
+        let mime_type = mime.lookup(f.name).split("/")[0];
         if(mime_type === "audio" || mime_type === "video") {
             return true;
         }
@@ -116,15 +116,15 @@ StreamServer.init = function(port, files) {
     StreamServer.use_m3u = media_files.length > 1;
 
     // Create HTTP server
-    var server = http.createServer();
+    let server = http.createServer();
     server.on("request", function(request, response) {
-        var u = url.parse(request.url);
+        let u = url.parse(request.url);
 
         if(u.pathname === "/favicon.ico") return response.end();
 
         if(u.pathname === "/") {
             if(StreamServer.use_m3u) {
-                var host = request.headers.host || "localhost";
+                let host = request.headers.host || "localhost";
                 response.setHeader("Content-Type", "application/x-mpegurl; charset=utf-8");
                 return response.end("#EXTM3U\n" + media_files.map(function(f) {
                     return "#EXTINF:-1," + f.name + "\n" + "http://" + host + "/" + f.id + "." + f.ext;
@@ -135,7 +135,7 @@ StreamServer.init = function(port, files) {
         }
 
         // Allow random file extensions to be given (http://127.0.0.1:8888/2.srt)
-        var i = Number(u.pathname.slice(1).split(".")[0]) - 1;
+        let i = Number(u.pathname.slice(1).split(".")[0]) - 1;
 
         if(isNaN(i) || i >= files.length || i < 0) {
             response.statusCode = 404;
@@ -143,8 +143,8 @@ StreamServer.init = function(port, files) {
             return;
         }
 
-        var file = files[i];
-        var range = request.headers.range;
+        let file = files[i];
+        let range = request.headers.range;
         range = range && rangeParser(file.length, range)[0];
 
         response.setHeader("Accept-Ranges", "bytes");
@@ -153,7 +153,7 @@ StreamServer.init = function(port, files) {
         ++StreamServer.open_streams;
         StreamServer.emit("stream-open");
 
-        var done_once = false;
+        let done_once = false;
         function stream_done() {
             if(done_once) return;
             done_once = true;
@@ -188,4 +188,4 @@ StreamServer.init = function(port, files) {
     server.listen(StreamServer.port);
 };
 
-module.exports = StreamServer;
+export default StreamServer;

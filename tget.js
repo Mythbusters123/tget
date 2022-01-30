@@ -22,13 +22,16 @@
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-var StreamServer = require("./stream");
-var TorrentEngine = require("./torrent");
-var utils = require("./utils");
-var fs = require("fs");
-var path = require("path");
-var readline = require("readline");
-var argv = require("rc")("tget");
+import StreamServer from "./stream.js";
+import TorrentEngine from "./torrent.js";
+import {bytes, pad } from "./utils.js";
+import fs from "fs";
+import path from "path";
+import readline from "readline";
+import rc from "rc";
+import chalk from "chalk";
+
+let argv = rc("tget")
 
 // Alias long options
 if(argv.connections) argv.c = argv.connections;
@@ -45,8 +48,8 @@ if(argv.wait) argv.w = argv.wait;
 
 // Options check
 if(argv.w && !argv.s) {
-    console.error("-w option requires -s");
-    return;
+    console.error(chalk.bgRed("-w option requires -s"));
+   process.exit(false) 
 }
 
 if(argv.w) {
@@ -54,13 +57,13 @@ if(argv.w) {
     argv.i = true;
 }
 
-var verbose = !argv.q;
+let verbose = !argv.q;
 
 //
 // File stream mode
 //
 if(argv.S) {
-    var local_path;
+    let local_path;
     if(!(local_path = argv._[0])) {
         local_path = argv.S;
         argv.S = 8888;
@@ -68,13 +71,13 @@ if(argv.S) {
 
     if(!fs.existsSync(local_path)) {
         console.error("Usage: tget -S [port] <path>");
-        return;
+        process.exit(true);
     }
 
-    var files = [];
+    let files = [];
 
     function torrentize(file) {
-        var stat = fs.lstatSync(file);
+        let stat = fs.lstatSync(file);
         if(stat.isDirectory()) {
             fs.readdirSync(file).forEach(function(sub_file) {
                 torrentize(path.join(file, sub_file));
@@ -103,7 +106,7 @@ if(argv.S) {
 
         console.log("\nLocal streaming enabled on port " + StreamServer.port + " (default file is " + StreamServer.def_idx + ")");
     }
-    return;
+    process.exit(0);
 }
 
 //
@@ -112,14 +115,14 @@ if(argv.S) {
 TorrentEngine.load(argv._[0], argv, function(torrent) {
     // Missing or invalid argument
     if(!torrent) {
-        console.error("Usage: tget <path|url|magnet> [options]");
-        return;
+        console.error(chalk.yellowBright.bold("Usage: tget <path|url|magnet> [options]"));
+        process.exit(false);
     }
 
     TorrentEngine.init(torrent);
 
     // Create command line interface
-    var rl = readline.createInterface({
+    let rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
@@ -132,7 +135,7 @@ TorrentEngine.load(argv._[0], argv, function(torrent) {
     }
 
     // Exit safety check
-    var exiting = false;
+    let exiting = false;
     function exit(force) {
         if(!force && (!TorrentEngine.done || StreamServer.open_streams > 0 || argv.i)) return;
 
@@ -147,48 +150,48 @@ TorrentEngine.load(argv._[0], argv, function(torrent) {
 
     // Forceful exit
     rl.on("SIGINT", function() {
-        exit(true);
+        process.exit(true);
     });
 
     rl.setPrompt("");
-    if(verbose) rl.write("Initializing torrent engine...");
+    if(verbose) rl.write(chalk.yellowBright.bold("Initializing torrent engine..."));
 
     TorrentEngine.on("ready", function() {
         if(verbose) {
-            rl.write(" Ready.\n\n");
+            rl.write(chalk.green.bold(" Ready.\n\n"));
 
-            rl.write("Downloading files:\n");
+            rl.write(chalk.blue.bold("Downloading files:\n"));
             TorrentEngine.files.forEach(function(file, i) {
-                rl.write("  [" + (i+1) + "] " + file.path + "\n");
+                rl.write(chalk.cyan("  [" + (i+1) + "] " + file.path + "\n"));
             });
 
             rl.write("\n");
         }
 
         function print_progress() {
-            var buf = [];
+            let buf = [];
 
             // Percent indicator
-            var percent = TorrentEngine.downloadPercent();
-            buf.push(utils.pad(percent, 3) + "%");
+            let percent = TorrentEngine.downloadPercent();
+            buf.push(chalk.magentaBright(pad(percent, 3) + "%"));
             buf.push(" ");
 
             // Progress bar
-            var twens_percent = Math.floor(percent*2.5/10);
-            buf.push("[");
-            buf.push("==============================".slice(0, twens_percent));
-            buf.push(twens_percent ? ">" : " ");
-            buf.push("                              ".slice(0, 25-twens_percent));
-            buf.push("]");
+            let twens_percent = Math.floor(percent*2.5/10);
+            buf.push(chalk.greenBright("["));
+            buf.push(chalk.greenBright.bold("==============================".slice(0, twens_percent)));
+            buf.push(chalk.greenBright.bold(twens_percent ? ">" : " "));
+            buf.push(chalk.greenBright("                              ".slice(0, 25-twens_percent)));
+            buf.push(chalk.greenBright("]"));
             buf.push("  ");
 
             // Downloaded bytes
-            buf.push(utils.bytes(TorrentEngine.downloadedBytes()));
+            buf.push(chalk.yellow.bold(bytes(TorrentEngine.downloadedBytes())));
             buf.push("  ");
 
             // Download speed
-            buf.push(utils.bytes(TorrentEngine.downloadSpeed()));
-            buf.push("/s");
+            buf.push(chalk.yellow.bold(bytes(TorrentEngine.downloadSpeed())));
+            buf.push(chalk.yellow.bold("/s"));
             buf.push("  ");
 
             // Peers informations
@@ -196,22 +199,21 @@ TorrentEngine.load(argv._[0], argv, function(torrent) {
                 return !wire.peerChoking;
             }
 
-            buf.push(TorrentEngine.wires.filter(active).length);
-            buf.push("/");
-            buf.push(TorrentEngine.wires.length);
-            buf.push(" peers");
+            buf.push(chalk.yellow.bold(TorrentEngine.wires.filter(active).length));
+            buf.push(chalk.yellow.bold("/"));
+            buf.push(chalk.yellow.bold(TorrentEngine.wires.length));
+            buf.push(chalk.yellow.bold(" peers"));
             buf.push("  ");
 
             // Stream informations
             if(StreamServer.enabled) {
-                buf.push(StreamServer.open_streams);
-                buf.push(" streams");
+                buf.push(chalk.yellow.bold(StreamServer.open_streams));
+                buf.push(chalk.yellow.bold(" streams"));
             }
 
             // ETA
-            buf.push("ETA: ")
-            buf.push(TorrentEngine.etaTime())
-            
+            buf.push(chalk.yellow.bold("ETA: "));
+            buf.push(chalk.yellow.bold(TorrentEngine.etaTime()));
 
             rl.write(buf.join(""));
         }
@@ -221,7 +223,7 @@ TorrentEngine.load(argv._[0], argv, function(torrent) {
             rl.write("", { ctrl: true, name: "u" });
         }
 
-        var throttle = false;
+        let throttle = false;
         function update_gui(done) {
             if(done || !throttle) {
                 clear_line();
@@ -238,7 +240,7 @@ TorrentEngine.load(argv._[0], argv, function(torrent) {
         // Download is fully done
         TorrentEngine.on("done", function() {
             if(verbose) update_gui(true);
-            exit(false);
+            process.exit(false);
         });
 
         // Init streaming server
@@ -256,7 +258,7 @@ TorrentEngine.load(argv._[0], argv, function(torrent) {
             }
 
             StreamServer.on("stream-close", function() {
-                exit(false);
+                process.exit(false);
             });
         }
 

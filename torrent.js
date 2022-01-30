@@ -21,15 +21,15 @@
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-var fs = require("fs");
-var path = require("path");
-var events = require("events");
-var crypto = require("crypto");
-var moment = require('moment')
-var mkdirp = require("mkdirp");
-var torrentStream = require("torrent-stream");
+import fs from "fs";
+import path from "path";
+import events from "events";
+import crypto from "crypto";
+import moment from "moment";
+import mkdirp from "mkdirp";
+import torrentStream from "torrent-stream";
 
-var TorrentEngine = new events.EventEmitter();
+let TorrentEngine = new events.EventEmitter();
 
 TorrentEngine.ready = false;
 TorrentEngine.done = false;
@@ -46,11 +46,11 @@ TorrentEngine.total_pieces = 0;
 TorrentEngine.finished_pieces = 0;
 TorrentEngine.connect = [];
 
-var engine;
-var ephemeral = false;
-var wait = false;
-var listen = false;
-var download_snapshot = 0;
+let engine;
+let ephemeral = false;
+let wait = false;
+let listen = false;
+let download_snapshot = 0;
 
 function checkDone() {
     if(TorrentEngine.finished_pieces == TorrentEngine.total_pieces) {
@@ -66,7 +66,7 @@ TorrentEngine.load = function(torrent, opts, cb) {
     }
 
     // Options
-    if(opts.c) { TorrentEngine.opts.connections = opts.c; }
+   if(opts.c) { TorrentEngine.opts.connections = opts.c; }
     if(opts.d) { TorrentEngine.opts.dht = (!opts.d || opts.d === true) ? false : opts.d; }
     if(opts.t) { TorrentEngine.opts.tracker = false; }
     if(opts.u) { TorrentEngine.opts.uploads = opts.u; }
@@ -92,11 +92,11 @@ TorrentEngine.load = function(torrent, opts, cb) {
     }
 
     // HTTP link
-    var https = torrent.slice(0, 8) == "https://";
+    let https = torrent.slice(0, 8) == "https://";
     if(https || torrent.slice(0, 7) == "http://") {
-        var http = require(https ? "https" : "http");
+        let http = require(https ? "https" : "http");
         http.get(torrent, function(res) {
-            var buffers = [];
+            let buffers = [];
 
             res.on("data", function(data) {
                 buffers.push(data);
@@ -145,7 +145,7 @@ TorrentEngine.init = function(torrent, opts) {
         }
 
         // Resuming a download ?
-        for(var i = 0; i < TorrentEngine.total_pieces; i++) {
+        for(let i = 0; i < TorrentEngine.total_pieces; i++) {
             if(engine.bitfield.get(i)) {
                 ++TorrentEngine.finished_pieces;
             }
@@ -197,4 +197,4 @@ TorrentEngine.exit = function(cb) {
     });
 };
 
-module.exports = TorrentEngine;
+export default TorrentEngine;
